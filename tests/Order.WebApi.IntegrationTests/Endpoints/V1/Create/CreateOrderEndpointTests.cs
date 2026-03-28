@@ -1,12 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 
-using Microsoft.AspNetCore.Mvc.Testing;
+using Order.WebApi.IntegrationTests;
 
 namespace Order.WebApi.Endpoints.V1.Create.IntegrationTests;
 
-public class CreateOrderEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class CreateOrderEndpointTests(OrderWebApiFactory factory)
+    : IClassFixture<OrderWebApiFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
     private const string Endpoint = "/v1/orders";

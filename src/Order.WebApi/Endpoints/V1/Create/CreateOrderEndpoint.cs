@@ -14,6 +14,7 @@ public static class CreateOrderEndpoint
     private static async Task<IResult> HandleAsync(
         CreateOrderRequest request,
         IValidator<CreateOrderRequest> validator,
+        IProducer<OrderCreatedEvent> producer,
         CancellationToken cancellationToken)
     {
         ValidationResult validationResult = await validator.ValidateAsync(request, cancellationToken);
@@ -24,7 +25,13 @@ public static class CreateOrderEndpoint
             return Results.ValidationProblem(errors);
         }
 
-        // TODO: publish to SQS
+        OrderCreatedEvent @event = new(
+            OrderId: Guid.NewGuid().ToString(),
+            CustomerId: request.CustomerId,
+            Items: [.. request.Items.Select(i => new OrderCreatedEventItem(i.ProductId, i.Quantity, i.UnitPrice))],
+            CreatedAt: DateTimeOffset.UtcNow);
+
+        await producer.ProduceAsync(@event, cancellationToken);
 
         return Results.Accepted();
     }
