@@ -23,14 +23,14 @@ public sealed class SQSConsumer<TEvent>(
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var response = await sqs.ReceiveMessageAsync(new ReceiveMessageRequest
+            ReceiveMessageResponse response = await sqs.ReceiveMessageAsync(new ReceiveMessageRequest
             {
                 QueueUrl = queueUrl,
                 MaxNumberOfMessages = 10,
                 WaitTimeSeconds = 20
             }, stoppingToken);
 
-            foreach (var message in response.Messages)
+            foreach (Message message in response.Messages)
             {
                 await ProcessAsync(message, stoppingToken);
             }
@@ -41,10 +41,10 @@ public sealed class SQSConsumer<TEvent>(
     {
         try
         {
-            var @event = JsonSerializer.Deserialize<TEvent>(message.Body)!;
+            TEvent @event = JsonSerializer.Deserialize<TEvent>(message.Body)!;
 
             await using var scope = scopeFactory.CreateAsyncScope();
-            var handler = scope.ServiceProvider.GetRequiredService<IEventHandler<TEvent>>();
+            IEventHandler<TEvent> handler = scope.ServiceProvider.GetRequiredService<IEventHandler<TEvent>>();
 
             await handler.HandleAsync(@event, cancellationToken);
 
