@@ -8,7 +8,7 @@ global using OpenTelemetry.Trace;
 
 global using Order.Core.Events;
 global using Order.Core.Messaging;
-global using Order.Infrastructure;
+global using Order.Infrastructure.Messaging;
 global using Order.Infrastructure.Telemetry;
 
 global using Order.WebApi.Endpoints.V1;

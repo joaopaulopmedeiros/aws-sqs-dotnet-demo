@@ -7,9 +7,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
 using Order.Core.Messaging;
-using Order.Infrastructure.Messaging;
 
-namespace Order.Infrastructure;
+namespace Order.Infrastructure.Messaging;
 
 public static class ServiceCollectionExtensions
 {
@@ -17,17 +16,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         string queueUrlConfigKey)
     {
-        services.TryAddSingleton<IAmazonSQS>(sp =>
-        {
-            IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
-
-            AmazonSQSConfig config = new()
-            {
-                ServiceURL = configuration["AWS:ServiceURL"]
-            };
-
-            return new AmazonSQSClient(new BasicAWSCredentials("test", "test"), config);
-        });
+        services.TryAddSQS();
 
         services.AddScoped<IProducer<TEvent>>(sp =>
         {
@@ -44,17 +33,7 @@ public static class ServiceCollectionExtensions
         string queueUrlConfigKey)
         where THandler : class, IEventHandler<TEvent>
     {
-        services.TryAddSingleton<IAmazonSQS>(sp =>
-        {
-            IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
-
-            AmazonSQSConfig config = new()
-            {
-                ServiceURL = configuration["AWS:ServiceURL"]
-            };
-
-            return new AmazonSQSClient(new BasicAWSCredentials("test", "test"), config);
-        });
+        services.TryAddSQS();
 
         services.AddScoped<IEventHandler<TEvent>, THandler>();
 
@@ -66,5 +45,24 @@ public static class ServiceCollectionExtensions
         ));
 
         return services;
+    }
+
+    private static void TryAddSQS(this IServiceCollection services)
+    {
+        services.TryAddSingleton<IAmazonSQS>(sp =>
+        {
+            IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
+
+            AmazonSQSConfig config = new()
+            {
+                ServiceURL = configuration["AWS:ServiceURL"]
+            };
+
+            return new AmazonSQSClient(
+                new BasicAWSCredentials(
+                    configuration["AWS:AccessKey"],
+                    configuration["AWS:SecretKey"]),
+                config);
+        });
     }
 }
