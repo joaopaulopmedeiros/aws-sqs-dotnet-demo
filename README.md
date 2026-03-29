@@ -13,6 +13,7 @@ Demo application showcasing an asynchronous event-driven order processing using 
 - [API Reference](#api-reference)
 - [Queue Configuration](#queue-configuration)
 - [Observability](#observability)
+- [Integration Testing](#integration-testing)
 - [Load Testing](#load-testing)
 - [Technology Stack](#technology-stack)
 
@@ -61,7 +62,8 @@ aws-sqs-dotnet-demo/
 │       └── Handlers/
 │           └── OrderCreatedEventHandler.cs
 ├── tests/
-│   └── Order.WebApi.LoadTests/     # k6 load tests
+│   ├── Order.WebApi.IntegrationTests/  # Integration tests with Testcontainers
+│   └── Order.WebApi.LoadTests/         # k6 load tests
 ├── .localstack/init/
 │   └── 01-create-queues.sh         # Queue provisioning script
 ├── .otel/                          # OpenTelemetry observability stack config
@@ -229,21 +231,42 @@ The following datasources are provisioned automatically:
 
 Tempo is configured with correlations to Loki (trace → logs) and Prometheus (service map).
 
-### Configuration files
+---
 
-All observability configuration lives in `.otel/`:
+## Integration Testing
+
+The `Order.WebApi.IntegrationTests` project contains integration tests that exercise the full HTTP stack against a real SQS-compatible dependency.
+
+### How it works
+
+[Testcontainers for .NET](https://dotnet.testcontainers.org/) is used to spin up an ephemeral LocalStack container (`localstack/localstack:4.13.1`) before the test suite runs. `WebApplicationFactory<Program>` boots the actual ASP.NET Core app in-process and is reconfigured at runtime to point at the container's SQS endpoint.
 
 ```
-.otel/
-├── otel-collector-config.yml
-├── loki.yml
-├── tempo.yml
-├── prometheus.yml
-└── grafana/
-    └── provisioning/
-        └── datasources/
-            └── datasources.yml
+Test run
+ └── OrderWebApiFactory (IAsyncLifetime)
+      ├── Starts LocalStack container via Testcontainers
+      ├── Creates the "orders" SQS queue
+      ├── Overrides AWS:ServiceURL and Messaging:QueueUrl in-process
+      └── Disposes the container when the suite finishes
 ```
+
+### Test cases
+
+| Test | Expected |
+|---|---|
+| Valid request | `202 Accepted` |
+| Missing `customerId` | `400 Bad Request` |
+| Empty `items` list | `400 Bad Request` |
+| Item with empty `productId` | `400 Bad Request` |
+| Item with `quantity` = 0 | `400 Bad Request` |
+| Item with `unitPrice` = 0 | `400 Bad Request` |
+
+### Running the tests
+
+```bash
+dotnet test tests/Order.WebApi.IntegrationTests
+```
+Docker must be running: Testcontainers pulls and starts the LocalStack image automatically.
 
 ---
 
@@ -270,5 +293,6 @@ This command starts a `k6` container (Docker Compose `load` profile) that target
 | API Documentation | Scalar / OpenAPI |
 | Local AWS Emulation | LocalStack |
 | Containerisation | Docker / Docker Compose |
+| Integration Testing | xUnit, Testcontainers for .NET, WebApplicationFactory |
 | Load Testing | k6 |
 | Observability | OpenTelemetry, Loki, Tempo, Prometheus, Grafana |
