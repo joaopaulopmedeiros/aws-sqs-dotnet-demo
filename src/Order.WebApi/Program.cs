@@ -1,4 +1,9 @@
+using OpenTelemetry.Metrics;
+
 var builder = WebApplication.CreateSlimBuilder(args);
+
+builder.AddTelemetry("order-api",
+    configureMetrics: m => m.AddAspNetCoreInstrumentation());
 
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
