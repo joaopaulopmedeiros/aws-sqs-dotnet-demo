@@ -2,8 +2,6 @@
 
 Demo application showcasing an asynchronous event-driven order processing using **Amazon SQS** and **.NET 10**. The solution follows a clean layered architecture, separating domain contracts, infrastructure concerns, REST API exposure, and background consumption into independent projects.
 
----
-
 ## Table of Contents
 
 - [Overview](#overview)
@@ -17,15 +15,11 @@ Demo application showcasing an asynchronous event-driven order processing using 
 - [Load Testing](#load-testing)
 - [Technology Stack](#technology-stack)
 
----
-
 ## Overview
 
 When a client submits an order via the REST API, the request is validated, an `OrderCreatedEvent` domain event is serialised and published to an **SQS queue**. A separate **worker service** continuously polls the queue and processes each event asynchronously. Failed messages are automatically redirected to a **Dead Letter Queue (DLQ)** after three unsuccessful processing attempts.
 
 LocalStack is used to emulate the AWS SQS service locally, eliminating the need for an active AWS account during development.
-
----
 
 ### Projects
 
@@ -35,8 +29,6 @@ LocalStack is used to emulate the AWS SQS service locally, eliminating the need 
 | `Order.Infrastructure` | Class Library | AWS SQS producer and consumer implementations. Encapsulates all AWS SDK interactions. |
 | `Order.WebApi` | ASP.NET Core | REST API. Validates requests and publishes `OrderCreatedEvent` to SQS. |
 | `Order.Worker` | Worker Service | Background service that consumes and processes events from the SQS queue. |
-
----
 
 ## Project Structure
 
@@ -51,7 +43,7 @@ aws-sqs-dotnet-demo/
 │   │       └── IProducer.cs
 │   ├── Order.Infrastructure/       # AWS SQS integration
 │   │   └── Messaging/
-│   │       ├── SqsProducer.cs
+│   │       ├── SQSProducer.cs
 │   │       └── SQSConsumer.cs
 │   ├── Order.WebApi/               # REST API
 │   │   └── Endpoints/V1/Create/
@@ -80,8 +72,6 @@ aws-sqs-dotnet-demo/
 └── Makefile
 ```
 
----
-
 ## Prerequisites
 
 | Tool | Minimum Version |
@@ -90,8 +80,6 @@ aws-sqs-dotnet-demo/
 | [Docker Compose](https://docs.docker.com/compose/) | 2.20+ |
 | [.NET SDK](https://dotnet.microsoft.com/) *(optional, for local dev)* | 10.0 |
 | [k6](https://k6.io/) *(optional, for load tests outside Docker)* | 0.50+ |
-
----
 
 ## Getting Started
 
@@ -151,8 +139,6 @@ A successful request returns **HTTP 202 Accepted**. The `Order.Worker` container
 make down
 ```
 
----
-
 ## API Reference
 
 ### POST `/v1/orders`
@@ -186,8 +172,6 @@ Creates a new order and publishes an `OrderCreatedEvent` to the SQS queue.
 - OpenAPI spec: `http://localhost:8080/openapi/v1.json`
 - Scalar UI: `http://localhost:8080/scalar`
 
----
-
 ## Queue Configuration
 
 Queues are provisioned by `.localstack/init/01-create-queues.sh` on LocalStack startup.
@@ -200,8 +184,6 @@ Queues are provisioned by `.localstack/init/01-create-queues.sh` on LocalStack s
 | Max Receive Count | 3 | — |
 
 Messages that fail processing after **3 attempts** are automatically moved to `orders-dlq` via the SQS Redrive Policy.
-
----
 
 ## Observability
 
@@ -230,8 +212,6 @@ The following datasources are provisioned automatically:
 | Tempo | `http://localhost:3200` |
 
 Tempo is configured with correlations to Loki (trace → logs) and Prometheus (service map).
-
----
 
 ## Integration Testing
 
@@ -268,8 +248,6 @@ dotnet test tests/Order.WebApi.IntegrationTests
 ```
 Docker must be running: Testcontainers pulls and starts the LocalStack image automatically.
 
----
-
 ## Load Testing
 
 A [k6](https://k6.io/) load test script is included to simulate concurrent order creation.
@@ -279,8 +257,6 @@ make load
 ```
 
 This command starts a `k6` container (Docker Compose `load` profile) that targets the API and reports throughput, latency, and error rate metrics.
-
----
 
 ## Technology Stack
 
