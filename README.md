@@ -1,6 +1,6 @@
 # aws-sqs-dotnet-demo
 
-Demo application showcasing an asynchronous event-driven order processing using **Amazon SQS** and **.NET 10**. The solution follows a clean layered architecture, separating domain contracts, infrastructure concerns, REST API exposure, and background consumption into independent projects.
+Demo application showcasing an asynchronous event-driven order processing using **Amazon SQS** and **.NET 10**.
 
 ## Table of Contents
 
@@ -17,7 +17,10 @@ Demo application showcasing an asynchronous event-driven order processing using 
 
 ## Overview
 
+<img src="./docs/arch.png">
+
 When a client submits an order via the REST API, the request is validated, an `OrderCreatedEvent` domain event is serialised and published to an **SQS queue**. A separate **worker service** continuously polls the queue and processes each event asynchronously. Failed messages are automatically redirected to a **Dead Letter Queue (DLQ)** after three unsuccessful processing attempts.
+
 
 LocalStack is used to emulate the AWS SQS service locally, eliminating the need for an active AWS account during development.
 
@@ -86,8 +89,8 @@ aws-sqs-dotnet-demo/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-org>/aws-sqs-dotnet.git
-cd aws-sqs-dotnet
+git clone https://github.com/joaopaulopmedeiros/aws-sqs-dotnet-demo.git
+cd aws-sqs-dotnet-demo
 ```
 
 ### 2. Start all services
@@ -266,9 +269,9 @@ This command starts a `k6` container (Docker Compose `load` profile) that target
 | Web Framework | ASP.NET Core Minimal APIs |
 | Messaging | Amazon SQS (AWS SDK for .NET v3) |
 | Validation | FluentValidation |
-| API Documentation | Scalar / OpenAPI |
+| API Documentation | Scalar, OpenAPI |
 | Local AWS Emulation | LocalStack |
-| Containerisation | Docker / Docker Compose |
+| Containerisation | Docker, Docker Compose |
 | Integration Testing | xUnit, Testcontainers for .NET, WebApplicationFactory |
 | Load Testing | k6 |
 | Observability | OpenTelemetry, Loki, Tempo, Prometheus, Grafana |

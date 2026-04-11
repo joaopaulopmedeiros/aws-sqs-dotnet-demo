@@ -1,0 +1,33 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+
+LAYOUT_LEFT_RIGHT()
+LAYOUT_WITH_LEGEND()
+
+title Event-Driven Architecture - Message Flow
+
+Person(user, "User")
+
+System_Boundary(system, "Processing System") {
+
+    Container(api, "Web API", "REST API", "Receives HTTP requests")
+
+    Container(worker, "Worker", "Background Processor", "Subscribes to queue and processes messages")
+}
+
+System_Boundary(messaging, "Messaging") {
+
+    Container(queue, "Orders Queue", "SQS Queue", "Stores messages with redrive policy (maxReceiveCount=3)")
+
+    Container(dlq, "Orders DLQ", "SQS Dead Letter Queue", "Stores failed messages")
+}
+
+Rel_D(user, api, "Sends requests")
+
+Rel_D(api, queue, "Publishes messages")
+
+Rel_D(worker, queue, "Receives messages")
+
+Rel_D(queue, dlq, "Sends failed messages after retries")
+
+@enduml
